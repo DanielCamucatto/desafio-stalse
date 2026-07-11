@@ -1,3 +1,4 @@
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -10,10 +11,15 @@ from app import db, repository
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SEEDS_PATH = BASE_DIR / "seeds" / "tickets.json"
+DEFAULT_METRICS_PATH = BASE_DIR.parent / "data" / "processed" / "metrics.json"
 
 
 def get_db_path() -> str:
     return os.environ.get("DB_PATH", str(BASE_DIR / "db.sqlite"))
+
+
+def get_metrics_path() -> Path:
+    return Path(os.environ.get("METRICS_PATH", str(DEFAULT_METRICS_PATH)))
 
 
 def get_db():
@@ -66,3 +72,17 @@ def patch_ticket(ticket_id: int, patch: TicketPatch, connection=Depends(get_db))
         return repository.update_ticket(connection, ticket_id, **fields)
     except repository.TicketNotFoundError:
         raise HTTPException(status_code=404, detail="Ticket not found")
+
+
+@app.get("/metrics")
+def get_metrics():
+    metrics_path = get_metrics_path()
+    if not metrics_path.exists():
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Metrics not generated yet. Run the ETL pipeline first: "
+                "python data/etl.py"
+            ),
+        )
+    return json.loads(metrics_path.read_text(encoding="utf-8"))
