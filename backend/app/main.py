@@ -4,14 +4,17 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal, Optional
 
+from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
 from pydantic import BaseModel
 
-from app import db, repository
+from app import db, repository, webhook
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 SEEDS_PATH = BASE_DIR / "seeds" / "tickets.json"
 DEFAULT_METRICS_PATH = BASE_DIR.parent / "data" / "processed" / "metrics.json"
+
+load_dotenv(BASE_DIR / ".env")
 
 
 def get_db_path() -> str:
@@ -69,9 +72,14 @@ def get_tickets(connection=Depends(get_db)):
 def patch_ticket(ticket_id: int, patch: TicketPatch, connection=Depends(get_db)):
     fields = patch.model_dump(exclude_unset=True)
     try:
-        return repository.update_ticket(connection, ticket_id, **fields)
+        updated = repository.update_ticket(connection, ticket_id, **fields)
     except repository.TicketNotFoundError:
         raise HTTPException(status_code=404, detail="Ticket not found")
+
+    if updated["status"] == "closed" or updated["priority"] == "high":
+        webhook.notify_ticket_event(updated)
+
+    return updated
 
 
 @app.get("/metrics")
