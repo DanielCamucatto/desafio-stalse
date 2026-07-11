@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Backend
+backend/db.sqlite
+.env
+.env.*
+!.env.example
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+frontend/.env*
+
+# Dados
+data/raw/*
+!data/raw/.gitkeep
+
+# Sistema
+.DS_Store
+
+# Enunciado original (material interno da empresa, não publicar)
+teste-tecnico-stalse.pdf
+
+# Planejamento interno (uso pessoal, não publicar)
+PLANEJAMENTO.md
