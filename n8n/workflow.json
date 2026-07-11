@@ -1,0 +1,60 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket-events",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2f2380d0-d61c-4f6f-9ad8-8cc088d5fab9",
+      "name": "Webhook",
+      "webhookId": "e2ff41af-7115-4d68-bef5-22a1b92246ab"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a42e8797-e423-4ff0-994f-b9d10a3af115",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "368a27b0-c128-4d0b-8691-b9fe5aa8d392",
+  "meta": {
+    "instanceId": "5ea1eda30028f34403082092787be1defd6e65965de31516600ed6c1a46b607c"
+  },
+  "nodeGroups": [],
+  "id": "kOJhtdZxyuXCKyOR",
+  "tags": []
+}
