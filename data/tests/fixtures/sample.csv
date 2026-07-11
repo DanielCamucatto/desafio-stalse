@@ -1,0 +1,9 @@
+Ticket ID,Customer Name,Date of Purchase,Ticket Type,Ticket Priority,Ticket Channel
+1,Alice,2024-01-01,Technical issue,High,Email
+2,Bob,2024-01-01,Billing inquiry,Low,Chat
+3,Carol,2024-01-02,Technical issue,Medium,Phone
+4,Dave,2024-01-02,Refund request,High,Email
+5,Eve,2024-01-02,Technical issue,Low,Chat
+6,Frank,not_a_date,Billing inquiry,Medium,Email
+7,Grace,2024-01-03,Product inquiry,Low,Social media
+8,Heidi,2024-01-03,Technical issue,High,Phone
