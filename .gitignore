@@ -24,6 +24,9 @@ data/raw/*
 # Sistema
 .DS_Store
 
+# Claude Code (artefatos locais da ferramenta)
+.claude/
+
 # Enunciado original (material interno da empresa, não publicar)
 teste-tecnico-stalse.pdf
 
