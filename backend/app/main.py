@@ -68,6 +68,14 @@ def get_tickets(connection=Depends(get_db)):
     return repository.list_tickets(connection)
 
 
+@app.get("/tickets/{ticket_id}", response_model=TicketOut)
+def get_ticket(ticket_id: int, connection=Depends(get_db)):
+    ticket = repository.get_ticket(connection, ticket_id)
+    if ticket is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+    return ticket
+
+
 @app.patch("/tickets/{ticket_id}", response_model=TicketOut)
 def patch_ticket(ticket_id: int, patch: TicketPatch, connection=Depends(get_db)):
     fields = patch.model_dump(exclude_unset=True)

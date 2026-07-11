@@ -18,6 +18,19 @@ def test_get_tickets_returns_seeded_list(client):
     assert set(data[0].keys()) == TICKET_FIELDS
 
 
+def test_get_ticket_by_id_returns_ticket(client):
+    response = client.get("/tickets/1")
+
+    assert response.status_code == 200
+    assert response.json()["id"] == 1
+
+
+def test_get_ticket_by_id_not_found_returns_404(client):
+    response = client.get("/tickets/9999")
+
+    assert response.status_code == 404
+
+
 def test_patch_ticket_updates_status(client):
     response = client.patch("/tickets/1", json={"status": "closed"})
 
