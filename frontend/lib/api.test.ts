@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchTicket, fetchTickets, updateTicket } from "./api";
+import { fetchMetrics, fetchTicket, fetchTickets, updateTicket } from "./api";
 
 describe("fetchTickets", () => {
   beforeEach(() => {
@@ -96,5 +96,29 @@ describe("updateTicket", () => {
       })
     );
     expect(result).toEqual(updatedTicket);
+  });
+});
+
+describe("fetchMetrics", () => {
+  beforeEach(() => {
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  it("calls the metrics endpoint and returns the parsed data", async () => {
+    const mockMetrics = {
+      generated_at: "2024-01-01T00:00:00+00:00",
+      total_tickets: 2,
+      by_day: [{ date: "2024-01-01", count: 2 }],
+      top_categories: [{ category: "Technical issue", count: 2 }],
+    };
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      ok: true,
+      json: async () => mockMetrics,
+    });
+
+    const result = await fetchMetrics();
+
+    expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/metrics"));
+    expect(result).toEqual(mockMetrics);
   });
 });

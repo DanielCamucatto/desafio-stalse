@@ -42,3 +42,18 @@ export async function updateTicket(
   }
   return response.json();
 }
+
+export type Metrics = {
+  generated_at: string;
+  total_tickets: number;
+  by_day: { date: string; count: number }[];
+  top_categories: { category: string; count: number }[];
+};
+
+export async function fetchMetrics(): Promise<Metrics> {
+  const response = await fetch(`${API_BASE_URL}/metrics`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch metrics: ${response.status}`);
+  }
+  return response.json();
+}
