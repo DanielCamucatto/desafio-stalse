@@ -25,8 +25,8 @@ describe("TicketDetail", () => {
 
     expect(screen.getByText("Alice")).toBeInTheDocument();
     expect(screen.getByText("Login issue")).toBeInTheDocument();
-    expect(screen.getByText("open")).toBeInTheDocument();
-    expect(screen.getByText("low")).toBeInTheDocument();
+    expect(screen.getByText("Aberto")).toBeInTheDocument();
+    expect(screen.getByText("Baixa")).toBeInTheDocument();
   });
 
   it("closes the ticket and updates the UI when clicking the close button", async () => {
@@ -40,7 +40,7 @@ describe("TicketDetail", () => {
     await user.click(screen.getByRole("button", { name: /fechar ticket/i }));
 
     expect(api.updateTicket).toHaveBeenCalledWith(1, { status: "closed" });
-    expect(await screen.findByText("closed")).toBeInTheDocument();
+    expect(await screen.findByText("Fechado")).toBeInTheDocument();
   });
 
   it("marks priority as high and updates the UI", async () => {
@@ -56,6 +56,6 @@ describe("TicketDetail", () => {
     );
 
     expect(api.updateTicket).toHaveBeenCalledWith(1, { priority: "high" });
-    expect(await screen.findByText("high")).toBeInTheDocument();
+    expect(await screen.findByText("Alta")).toBeInTheDocument();
   });
 });

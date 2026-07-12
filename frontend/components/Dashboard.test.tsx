@@ -33,7 +33,7 @@ describe("Dashboard", () => {
   it("renders ticket counts by day", () => {
     render(<Dashboard metrics={metrics} />);
 
-    expect(screen.getByText("2024-01-01")).toBeInTheDocument();
-    expect(screen.getByText("2024-01-02")).toBeInTheDocument();
+    expect(screen.getByText("01/01/2024")).toBeInTheDocument();
+    expect(screen.getByText("02/01/2024")).toBeInTheDocument();
   });
 });
