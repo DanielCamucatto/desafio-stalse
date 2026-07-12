@@ -5,33 +5,172 @@ dashboard com métricas geradas via ETL (pandas) a partir de um dataset do
 Kaggle, e automação via n8n disparada por webhook quando um ticket é fechado
 ou marcado como prioridade alta.
 
-## Status
+## Prints
 
-🚧 Em desenvolvimento, seguindo TDD (Red → Green → Refactor) fase a fase.
-O planejamento completo (todas as fases, do MVP aos extras) está em
-[PLANEJAMENTO.md](PLANEJAMENTO.md).
+| Lista de tickets | Detalhe do ticket |
+|---|---|
+| ![Lista de tickets](screenshots/tickets.png) | ![Detalhe do ticket](screenshots/ticket-detail.png) |
+
+**n8n — execuções do webhook**
+
+![n8n executions](n8n/screenshot.png)
 
 ## Stack
 
 - **Backend**: Python (FastAPI) + SQLite
-- **Frontend**: Next.js (App Router) + TypeScript
+- **Frontend**: Next.js (App Router) + TypeScript + Tailwind CSS
 - **Dados**: pandas (ETL) a partir do [Customer Support Ticket
-  Dataset](https://www.kaggle.com/) (Kaggle)
+  Dataset](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset)
+  (Kaggle)
 - **Automação**: n8n (1 workflow com Webhook)
+- **Testes**: pytest (backend/ETL) + Vitest/React Testing Library (frontend)
 
 ## Estrutura do repositório
 
 ```
-/backend    → API FastAPI + SQLite (tickets)
-/frontend   → Next.js (tickets, detalhe, dashboard)
-/data       → ETL com pandas (dataset Kaggle → metrics.json)
-/n8n        → workflow.json + screenshot
+/backend
+  ├─ app/            → FastAPI (main.py, db.py, repository.py, webhook.py)
+  ├─ tests/          → pytest (22 testes)
+  ├─ seeds/tickets.json
+  ├─ requirements.txt
+  └─ .env.example
+/frontend
+  ├─ app/            → /tickets, /tickets/[id], /dashboard
+  ├─ components/     → TicketsTable, TicketDetail, Dashboard, NavBar...
+  ├─ lib/            → client de API tipado (api.ts) + formatação de datas
+  └─ package.json
+/data
+  ├─ raw/            → dataset do Kaggle (não versionado)
+  ├─ processed/metrics.json → gerado pelo ETL (versionado)
+  └─ etl.py
+/n8n
+  ├─ workflow.json   → export do workflow (Webhook → Edit Fields)
+  └─ screenshot.png  → execuções bem-sucedidas
+docker-compose.yml    → sobe o n8n localmente
 ```
 
 ## Como rodar localmente
 
-> Em construção — as instruções completas de setup (backend, frontend, ETL
-> e n8n) serão adicionadas conforme cada parte for implementada.
+Pré-requisitos: Python 3.11+, Node 20+, Docker.
+
+### 1. Backend (FastAPI + SQLite)
+
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate        # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+cp .env.example .env             # ajuste N8N_WEBHOOK_URL depois de criar o workflow (passo 4)
+uvicorn app.main:app --reload    # http://localhost:8000
+```
+
+Os 20 tickets de seed são inseridos automaticamente no primeiro start
+(`backend/seeds/tickets.json` → `backend/db.sqlite`, gerado e ignorado pelo git).
+
+Rodar os testes:
+
+```bash
+pytest   # 22 testes
+```
+
+### 2. Dados (ETL com pandas)
+
+1. Baixe o dataset no Kaggle: [Customer Support Ticket
+   Dataset](https://www.kaggle.com/datasets/suraj520/customer-support-ticket-dataset)
+2. Salve o CSV em `data/raw/customer_support_tickets.csv`
+3. Rode o pipeline (usa o mesmo venv do backend, que já tem `pandas`):
+
+```bash
+cd data
+source ../backend/.venv/bin/activate
+python etl.py     # gera data/processed/metrics.json
+```
+
+O `metrics.json` já vai versionado no repositório (gerado com o dataset real:
+8469 tickets), então o passo acima só é necessário se quiser regenerá-lo.
+
+Rodar os testes do ETL:
+
+```bash
+pytest tests/test_etl.py   # 6 testes, usam uma fixture pequena (não o dataset real)
+```
+
+### 3. Frontend (Next.js)
+
+```bash
+cd frontend
+npm install
+npm run dev    # http://localhost:3000
+```
+
+Se o backend estiver rodando em outra porta, aponte o frontend para ele:
+
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
+```
+
+Rodar os testes:
+
+```bash
+npm run test   # 17 testes (Vitest + Testing Library)
+```
+
+### 4. n8n (automação do webhook)
+
+```bash
+docker compose up -d      # http://localhost:5678
+```
+
+Na primeira vez, o n8n pede para criar uma conta local (owner) — qualquer
+email/senha serve, é só local. Depois:
+
+1. Crie um workflow com um nó **Webhook** (`POST`, path `ticket-events`) → um
+   nó de sua escolha (ex.: **Edit Fields**, ou **HTTP Request** para
+   `https://httpbin.org/post`). O workflow já exportado está em
+   [`n8n/workflow.json`](n8n/workflow.json) e pode ser importado direto
+   (menu **"..."** → **Import from File**).
+2. Publique/ative o workflow (botão **Publish**/toggle **Active**).
+3. Copie a **Production URL** do nó Webhook (ex.:
+   `http://localhost:5678/webhook/ticket-events`) para `N8N_WEBHOOK_URL` no
+   `backend/.env`.
+
+### Fluxo completo
+
+Com os 3 serviços rodando: abra `http://localhost:3000/tickets`, mude a
+prioridade de um ticket para **alta** ou o status para **fechado** — isso
+dispara um POST para o n8n, visível na aba **Executions** do workflow.
+
+## Exemplo de payload do webhook
+
+Enviado pelo backend (`POST {N8N_WEBHOOK_URL}`) quando um ticket é fechado ou
+marcado como prioridade alta:
+
+```json
+{
+  "event": "ticket_updated",
+  "ticket_id": 1,
+  "status": "closed",
+  "priority": "high"
+}
+```
+
+## Variáveis de ambiente
+
+| Variável | Onde | Padrão | Descrição |
+|---|---|---|---|
+| `N8N_WEBHOOK_URL` | `backend/.env` | — | URL do webhook do n8n (Fase 4 do setup) |
+| `DB_PATH` | `backend/.env` (opcional) | `backend/db.sqlite` | Caminho do banco SQLite |
+| `METRICS_PATH` | `backend/.env` (opcional) | `data/processed/metrics.json` | Caminho do arquivo de métricas |
+| `NEXT_PUBLIC_API_URL` | ambiente do frontend | `http://localhost:8000` | URL base da API para o Next.js |
+
+## Endpoints da API
+
+- `GET /tickets` — lista todos os tickets
+- `GET /tickets/{id}` — detalhe de um ticket
+- `PATCH /tickets/{id}` — atualiza `status` e/ou `priority`
+- `GET /metrics` — métricas geradas pelo ETL
+
+Documentação interativa (Swagger) em `http://localhost:8000/docs`.
 
 ## Autor
 

@@ -6,6 +6,7 @@ from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app import db, repository, webhook
@@ -61,6 +62,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Mini Inbox API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/tickets", response_model=list[TicketOut])
