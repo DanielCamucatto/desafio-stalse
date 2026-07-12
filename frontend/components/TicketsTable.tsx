@@ -3,19 +3,36 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Ticket } from "@/lib/api";
-import { PriorityBadge, StatusBadge } from "@/components/StatusBadge";
+import {
+  PRIORITY_LABELS,
+  PriorityBadge,
+  STATUS_LABELS,
+  StatusBadge,
+} from "@/components/StatusBadge";
 import { formatDateTime } from "@/lib/format";
+
+const selectClasses =
+  "rounded-md border border-gray-200 px-3 py-2 text-sm text-brand-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
 
 export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("");
 
   const filteredTickets = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
-    if (!normalizedQuery) {
-      return tickets;
-    }
-    return tickets.filter((ticket) =>
-      [
+
+    return tickets.filter((ticket) => {
+      if (statusFilter && ticket.status !== statusFilter) {
+        return false;
+      }
+      if (priorityFilter && ticket.priority !== priorityFilter) {
+        return false;
+      }
+      if (!normalizedQuery) {
+        return true;
+      }
+      return [
         ticket.customer_name,
         ticket.subject,
         ticket.channel,
@@ -24,20 +41,48 @@ export function TicketsTable({ tickets }: { tickets: Ticket[] }) {
       ]
         .join(" ")
         .toLowerCase()
-        .includes(normalizedQuery)
-    );
-  }, [tickets, query]);
+        .includes(normalizedQuery);
+    });
+  }, [tickets, query, statusFilter, priorityFilter]);
 
   return (
     <div className="flex flex-col gap-4">
-      <input
-        type="text"
-        placeholder="Buscar por cliente, assunto, canal..."
-        aria-label="Buscar tickets"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
-        className="w-full max-w-md rounded-md border border-gray-200 px-4 py-2 text-sm text-brand-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-      />
+      <div className="flex flex-wrap gap-3">
+        <input
+          type="text"
+          placeholder="Buscar por cliente, assunto, canal..."
+          aria-label="Buscar tickets"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          className="w-full max-w-md rounded-md border border-gray-200 px-4 py-2 text-sm text-brand-900 placeholder:text-gray-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+        />
+        <select
+          aria-label="Filtrar por status"
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          className={selectClasses}
+        >
+          <option value="">Todos os status</option>
+          {Object.entries(STATUS_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+        <select
+          aria-label="Filtrar por prioridade"
+          value={priorityFilter}
+          onChange={(event) => setPriorityFilter(event.target.value)}
+          className={selectClasses}
+        >
+          <option value="">Todas as prioridades</option>
+          {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+            <option key={value} value={value}>
+              {label}
+            </option>
+          ))}
+        </select>
+      </div>
 
       <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm">
         <table className="w-full min-w-[720px] text-left text-sm">

@@ -1,5 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fetchMetrics, fetchTicket, fetchTickets, updateTicket } from "./api";
+import {
+  fetchMetrics,
+  fetchTicket,
+  fetchTickets,
+  updateTicket,
+} from "./api";
+
+function mockErrorResponse(status: number) {
+  return {
+    ok: false,
+    status,
+    json: async () => ({ detail: "should not be read on error path" }),
+  };
+}
 
 describe("fetchTickets", () => {
   beforeEach(() => {
@@ -29,13 +42,12 @@ describe("fetchTickets", () => {
     expect(result).toEqual(mockTickets);
   });
 
-  it("throws when the response is not ok", async () => {
-    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: false,
-      status: 500,
-    });
+  it("throws with the status code when the response is not ok", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockErrorResponse(500)
+    );
 
-    await expect(fetchTickets()).rejects.toThrow();
+    await expect(fetchTickets()).rejects.toThrow(/500/);
   });
 });
 
@@ -63,6 +75,14 @@ describe("fetchTicket", () => {
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/tickets/1"));
     expect(result).toEqual(mockTicket);
+  });
+
+  it("throws with the status code when the response is not ok", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockErrorResponse(404)
+    );
+
+    await expect(fetchTicket(1)).rejects.toThrow(/404/);
   });
 });
 
@@ -97,6 +117,16 @@ describe("updateTicket", () => {
     );
     expect(result).toEqual(updatedTicket);
   });
+
+  it("throws with the status code when the response is not ok", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockErrorResponse(422)
+    );
+
+    await expect(updateTicket(1, { status: "closed" })).rejects.toThrow(
+      /422/
+    );
+  });
 });
 
 describe("fetchMetrics", () => {
@@ -120,5 +150,13 @@ describe("fetchMetrics", () => {
 
     expect(fetch).toHaveBeenCalledWith(expect.stringContaining("/metrics"));
     expect(result).toEqual(mockMetrics);
+  });
+
+  it("throws with the status code when the response is not ok", async () => {
+    (fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockErrorResponse(503)
+    );
+
+    await expect(fetchMetrics()).rejects.toThrow(/503/);
   });
 });

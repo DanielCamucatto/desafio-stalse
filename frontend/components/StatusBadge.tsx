@@ -4,7 +4,7 @@ const STATUS_STYLES: Record<string, string> = {
   closed: "bg-gray-100 text-gray-600",
 };
 
-const STATUS_LABELS: Record<string, string> = {
+export const STATUS_LABELS: Record<string, string> = {
   open: "Aberto",
   in_progress: "Em andamento",
   closed: "Fechado",
@@ -16,7 +16,7 @@ const PRIORITY_STYLES: Record<string, string> = {
   low: "bg-gray-100 text-gray-600",
 };
 
-const PRIORITY_LABELS: Record<string, string> = {
+export const PRIORITY_LABELS: Record<string, string> = {
   high: "Alta",
   medium: "Média",
   low: "Baixa",

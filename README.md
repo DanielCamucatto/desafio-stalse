@@ -5,6 +5,39 @@ dashboard com métricas geradas via ETL (pandas) a partir de um dataset do
 Kaggle, e automação via n8n disparada por webhook quando um ticket é fechado
 ou marcado como prioridade alta.
 
+## Deploy (demo ao vivo)
+
+> O desafio não exige deploy (rodar localmente já é suficiente), mas o
+> projeto também está publicado:
+
+- **Frontend**: https://desafio-stalse-mini-inbox.netlify.app
+- **Backend**: https://desafio-stalse.onrender.com (`/docs` para o Swagger)
+- **n8n**: não hospedado (ver "Sobre o n8n na demo ao vivo" abaixo)
+
+O backend está no free tier do Render — a primeira requisição após um
+período de inatividade pode levar alguns segundos (cold start).
+
+### Sobre o n8n na demo ao vivo
+
+A demo publicada roda sem `N8N_WEBHOOK_URL` configurada, então o disparo do
+webhook fica inerte (o backend simplesmente não tenta chamar nada — ver
+`backend/app/webhook.py`, comportamento coberto por teste). Isso foi uma
+decisão consciente, não uma limitação do código:
+
+- Tentei hospedar o n8n numa VM `e2-micro` (Always Free) do **GCP**: além de
+  um bug no agente de deploy de container da GCP com o registry do n8n, e um
+  erro de permissão de volume, a `e2-micro` se mostrou fraca demais pro n8n
+  (CPU saturada, pouca RAM livre).
+- Tentei migrar para uma VM Ampere (ARM) da **Oracle Cloud** — specs bem
+  maiores no Always Free deles — mas a região disponível ficou **sem
+  capacidade de host** pra esse tipo de VM (erro genuíno da infraestrutura
+  deles, tentei duas configurações diferentes).
+- Em vez de forçar uma hospedagem frágil só pra dizer que "está no ar",
+  optei por manter a automação do n8n demonstrada **localmente** (é assim
+  que o desafio pede pra ser validado, veja os prints e o passo a passo
+  abaixo) e deixar a demo publicada focada em tickets + dashboard, que são
+  100% funcionais.
+
 ## Prints
 
 | Lista de tickets | Detalhe do ticket |
@@ -30,7 +63,7 @@ ou marcado como prioridade alta.
 ```
 /backend
   ├─ app/            → FastAPI (main.py, db.py, repository.py, webhook.py)
-  ├─ tests/          → pytest (22 testes)
+  ├─ tests/          → pytest (24 testes)
   ├─ seeds/tickets.json
   ├─ requirements.txt
   └─ .env.example
@@ -70,7 +103,7 @@ Os 20 tickets de seed são inseridos automaticamente no primeiro start
 Rodar os testes:
 
 ```bash
-pytest   # 22 testes
+pytest   # 24 testes
 ```
 
 ### 2. Dados (ETL com pandas)
@@ -112,7 +145,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000 npm run dev
 Rodar os testes:
 
 ```bash
-npm run test   # 17 testes (Vitest + Testing Library)
+npm run test   # 23 testes (Vitest + Testing Library)
 ```
 
 ### 4. n8n (automação do webhook)
